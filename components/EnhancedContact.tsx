@@ -206,7 +206,7 @@ export default function EnhancedContact() {
             Get In Touch
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Let's Work{" "}
+            Let&apos;s Work{" "}
             <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
               Together
             </span>
