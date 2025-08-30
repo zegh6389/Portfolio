@@ -105,6 +105,8 @@ const ContactCard = React.memo(({
   return CardContent;
 });
 
+ContactCard.displayName = 'ContactCard';
+
 export default function EnhancedContact() {
   const [formData, setFormData] = useState<FormData>({
     name: "",
