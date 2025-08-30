@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { motion, useInView, useAnimation, Variants } from "framer-motion";
+import { motion, useInView, Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 
@@ -107,7 +107,7 @@ export function WaveText({ text, className, delay = 0 }: AnimatedTextProps) {
 
   const container: Variants = {
     hidden: { opacity: 0 },
-    visible: (i = 1) => ({
+    visible: () => ({
       opacity: 1,
       transition: { staggerChildren: 0.03, delayChildren: delay },
     }),
@@ -209,7 +209,7 @@ export function RotatingText({
   );
 }
 
-export function ScrambleText({ text, className, duration = 2 }: AnimatedTextProps) {
+export function ScrambleText({ text, className }: AnimatedTextProps) {
   const [scrambledText, setScrambledText] = React.useState(text);
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   

@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef, memo } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { Moon, Sun, Menu, X, Home, User, Briefcase, Mail, Code2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { 
-  useSmoothScrollProgress, 
-  useSmoothActiveSection,
-  useMagneticEffect,
-  useViewportSize 
-} from "@/hooks/use-smooth-animations";
+// Note: These hooks are not implemented, this component is currently unused
+// import { 
+//   useSmoothScrollProgress, 
+//   useSmoothActiveSection,
+//   useMagneticEffect,
+//   useViewportSize 
+// } from "@/hooks/use-smooth-animations";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 // Constants

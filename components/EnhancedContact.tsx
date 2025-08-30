@@ -144,7 +144,7 @@ export default function EnhancedContact() {
       
       // Reset success message after 5 seconds
       setTimeout(() => setSubmitStatus("idle"), 5000);
-    } catch (error) {
+    } catch {
       setSubmitStatus("error");
     } finally {
       setIsSubmitting(false);
@@ -212,7 +212,7 @@ export default function EnhancedContact() {
             </span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Have a project in mind? Let's discuss how we can bring your ideas to life.
+            Have a project in mind? Let&apos;s discuss how we can bring your ideas to life.
           </p>
         </motion.div>
 
@@ -369,7 +369,7 @@ export default function EnhancedContact() {
                     className="mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-2 text-green-500"
                   >
                     <CheckCircle className="w-5 h-5" />
-                    Message sent successfully! I'll get back to you soon.
+                    Message sent successfully! I&apos;ll get back to you soon.
                   </motion.div>
                 )}
                 

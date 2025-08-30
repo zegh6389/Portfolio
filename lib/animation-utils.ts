@@ -1,4 +1,4 @@
-import { ANIMATION_CONFIG } from './animation-config';
+import { ANIMATION_CONFIG } from './constants/animation';
 
 /**
  * Utility functions for animations and performance optimization
@@ -12,9 +12,9 @@ export function prefersReducedMotion(): boolean {
 }
 
 // Throttle function for scroll/resize events
-export function throttle<T extends (...args: any[]) => void>(
+export function throttle<T extends (...args: unknown[]) => void>(
   func: T,
-  delay: number = ANIMATION_CONFIG.performance.scrollThrottle
+  delay: number = ANIMATION_CONFIG.PERFORMANCE.scrollThrottle
 ): T {
   let timeoutId: NodeJS.Timeout | null = null;
   let lastExecTime = 0;
@@ -36,9 +36,9 @@ export function throttle<T extends (...args: any[]) => void>(
 }
 
 // Debounce function for resize events
-export function debounce<T extends (...args: any[]) => void>(
+export function debounce<T extends (...args: unknown[]) => void>(
   func: T,
-  delay: number = ANIMATION_CONFIG.performance.resizeDebounce
+  delay: number = ANIMATION_CONFIG.PERFORMANCE.resizeDebounce
 ): T {
   let timeoutId: NodeJS.Timeout | null = null;
 
@@ -56,13 +56,13 @@ export function isLowEndDevice(): boolean {
   if (prefersReducedMotion()) return true;
 
   // Check connection speed
-  const connection = (navigator as any).connection;
+  const connection = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
   if (connection?.saveData || connection?.effectiveType === '2g') {
     return true;
   }
 
   // Check device memory (Chrome only)
-  const deviceMemory = (navigator as any).deviceMemory;
+  const deviceMemory = (navigator as unknown as { deviceMemory?: number }).deviceMemory;
   if (deviceMemory && deviceMemory < 4) {
     return true;
   }
@@ -79,7 +79,7 @@ export function isLowEndDevice(): boolean {
 export function getResponsiveAnimationConfig() {
   if (typeof window === 'undefined') {
     return {
-      particleCount: ANIMATION_CONFIG.performance.maxParticles,
+      particleCount: ANIMATION_CONFIG.PERFORMANCE.maxParticles,
       enableComplexAnimations: true,
     };
   }
@@ -89,20 +89,20 @@ export function getResponsiveAnimationConfig() {
 
   if (width < ANIMATION_CONFIG.breakpoints.mobile || isLowEnd) {
     return {
-      particleCount: Math.floor(ANIMATION_CONFIG.performance.maxParticles * 0.3),
+      particleCount: Math.floor(ANIMATION_CONFIG.PERFORMANCE.maxParticles * 0.3),
       enableComplexAnimations: false,
     };
   }
 
   if (width < ANIMATION_CONFIG.breakpoints.tablet) {
     return {
-      particleCount: Math.floor(ANIMATION_CONFIG.performance.maxParticles * 0.6),
+      particleCount: Math.floor(ANIMATION_CONFIG.PERFORMANCE.maxParticles * 0.6),
       enableComplexAnimations: true,
     };
   }
 
   return {
-    particleCount: ANIMATION_CONFIG.performance.maxParticles,
+    particleCount: ANIMATION_CONFIG.PERFORMANCE.maxParticles,
     enableComplexAnimations: true,
   };
 }
@@ -180,7 +180,7 @@ export function createIntersectionObserver(
   }
 
   return new IntersectionObserver(callback, {
-    threshold: ANIMATION_CONFIG.performance.intersectionThreshold,
+    threshold: ANIMATION_CONFIG.PERFORMANCE.intersectionThreshold,
     ...options,
   });
 }
@@ -220,7 +220,7 @@ export class AnimationPerformanceMonitor {
 }
 
 // Memoize expensive calculations
-export function memoize<T extends (...args: any[]) => any>(
+export function memoize<T extends (...args: unknown[]) => unknown>(
   fn: T,
   getKey?: (...args: Parameters<T>) => string
 ): T {
@@ -233,7 +233,7 @@ export function memoize<T extends (...args: any[]) => any>(
       return cache.get(key);
     }
 
-    const result = fn(...args);
+    const result = fn(...args) as ReturnType<T>;
     cache.set(key, result);
     return result;
   }) as T;

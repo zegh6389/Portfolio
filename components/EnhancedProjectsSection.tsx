@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, ChevronLeft, ChevronRight, Grid3x3, List, Sparkles } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Grid3x3, List, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import EnhancedProjectCard from "./EnhancedProjectCard";
@@ -106,7 +106,7 @@ export default function EnhancedProjectsSection() {
 
   // Expose for quick debugging in browser console
   if (typeof window !== 'undefined') {
-    // @ts-ignore
+    // @ts-expect-error - Adding debug property to window for development
     window.__debugProjects = { all: projects, filtered: filteredProjects };
   }
 

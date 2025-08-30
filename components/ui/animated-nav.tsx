@@ -30,7 +30,6 @@ interface AnimatedNavProps {
 }
 
 export function AnimatedNav({ items = defaultItems, className }: AnimatedNavProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
   const [activeItem, setActiveItem] = React.useState(0);
   const { scrollY } = useScroll();
   const navOpacity = useTransform(scrollY, [0, 100], [1, 0.95]);

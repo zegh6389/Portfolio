@@ -15,15 +15,11 @@ import {
   Github,
   Linkedin,
   Globe,
-  Code2,
   Sparkles,
   Star,
-  ChevronRight,
   User,
   FileText,
   Target,
-  Zap,
-  Rocket,
   Trophy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { motion, useAnimation, Variants } from "framer-motion";
-import { Github, Linkedin, Mail, ChevronDown, Sparkles, Code, Palette, Rocket } from "lucide-react";
+import { Mail, ChevronDown, Sparkles, Code, Palette, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TypewriterText, ScrambleText } from "@/components/ui/animated-text";
 
-// Animated text component
+// Animated text component (currently unused)
 function AnimatedText({ text, className }: { text: string; className?: string }) {
   const words = text.split(" ");
   
@@ -223,7 +223,7 @@ export default function EnhancedHero() {
               />
             </h1>
             <div className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold">
-              <span className="text-foreground/70">I'm a</span>
+              <span className="text-foreground/70">I&apos;m a</span>
               <motion.span
                 key={currentRole}
                 animate={controls}

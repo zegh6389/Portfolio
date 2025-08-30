@@ -84,7 +84,6 @@ export default function EnhancedHeaderFixed() {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const prefersReducedMotion = usePrefersReducedMotion();
-  const tickingRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -126,7 +125,7 @@ export default function EnhancedHeaderFixed() {
       }
       if (current !== activeSection) setActiveSection(current);
       // Debug (optional) - comment out in production
-      (window as any).__activeSection = current;
+      (window as unknown as { __activeSection: string }).__activeSection = current;
     };
 
     const onScroll = () => {
@@ -142,7 +141,7 @@ export default function EnhancedHeaderFixed() {
       window.removeEventListener('resize', onScroll);
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [mounted, rawScrollProgress]);
+  }, [mounted, rawScrollProgress, activeSection]);
 
   // Handle smooth scrolling
   const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {

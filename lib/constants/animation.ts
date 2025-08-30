@@ -48,6 +48,17 @@ export const ANIMATION_CONFIG = {
     maxAnimations: 3,
     reducedMotion: false,
     gpuAcceleration: true,
+    scrollThrottle: 16,
+    resizeDebounce: 250,
+    maxParticles: 50,
+    intersectionThreshold: 0.1,
+  },
+  
+  // Breakpoints
+  breakpoints: {
+    mobile: 768,
+    tablet: 1024,
+    desktop: 1280,
   },
 } as const;
 

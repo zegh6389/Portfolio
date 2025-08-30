@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MessageSquare, Minus, Maximize2 } from "lucide-react";
+import { X, MessageSquare, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChatWidgetProps {

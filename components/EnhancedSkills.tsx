@@ -63,7 +63,7 @@ export default function EnhancedSkills() {
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const prefersReducedMotion = useReducedMotion();
   const gridRef = useRef<HTMLDivElement | null>(null);
-  const gridInView = useInView(gridRef, { once: true, margin: "-80px" });
+  useInView(gridRef, { once: true, margin: "-80px" });
 
   useEffect(() => {
     setMounted(true);
@@ -344,7 +344,7 @@ export default function EnhancedSkills() {
             { label: "Years Experience", value: "5+", icon: Zap },
             { label: "Projects Completed", value: "50+", icon: Layers },
             { label: "Happy Clients", value: "30+", icon: Brain }
-          ].map((stat, index) => {
+          ].map((stat) => {
             const Icon = stat.icon;
             return (
               <div

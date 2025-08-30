@@ -186,7 +186,7 @@ export default function StatsSection() {
             </span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A glimpse into my journey and the milestones I've achieved
+            A glimpse into my journey and the milestones I&apos;ve achieved
           </p>
         </motion.div>
         
