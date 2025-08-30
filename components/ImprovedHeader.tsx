@@ -1,0 +1,458 @@
+"use client";
+
+import React, { useState, useEffect, useCallback, useRef, memo } from "react";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { Moon, Sun, Menu, X, Home, User, Briefcase, Mail, Code2 } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { 
+  useSmoothScrollProgress, 
+  useSmoothActiveSection,
+  useMagneticEffect,
+  useViewportSize 
+} from "@/hooks/use-smooth-animations";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
+
+// Constants
+const SCROLL_THRESHOLD = 20;
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+}
+
+const navItems: NavItem[] = [
+  { href: "#home", label: "Home", icon: Home },
+  { href: "#resume", label: "Resume", icon: User },
+  { href: "#skills", label: "Skills", icon: Code2 },
+  { href: "#projects", label: "Projects", icon: Briefcase },
+  { href: "#contact", label: "Contact", icon: Mail },
+];
+
+// Smooth scroll progress bar component
+const ScrollProgressBar = memo(() => {
+  const progress = useSmoothScrollProgress();
+  const reducedMotion = useReducedMotion();
+  
+  return (
+    <div 
+      className="fixed top-0 left-0 right-0 h-1 z-[60] overflow-hidden"
+      role="progressbar"
+      aria-valuenow={Math.round(progress * 100)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label="Page scroll progress"
+    >
+      <div 
+        className="h-full bg-gradient-to-r from-primary via-purple-600 to-pink-600 origin-left transition-transform"
+        style={{
+          transform: `scaleX(${progress})`,
+          transition: reducedMotion ? 'none' : 'transform 0.1s ease-out',
+          willChange: 'transform'
+        }}
+      />
+    </div>
+  );
+});
+ScrollProgressBar.displayName = 'ScrollProgressBar';
+
+// Magnetic button component with improved performance
+const MagneticButton = memo(({ 
+  children, 
+  className,
+  strength = 0.3 
+}: { 
+  children: React.ReactNode; 
+  className?: string;
+  strength?: number;
+}) => {
+  const magneticRef = useMagneticEffect(strength);
+  const reducedMotion = useReducedMotion();
+  
+  if (reducedMotion) {
+    return <div className={className}>{children}</div>;
+  }
+  
+  return (
+    <div 
+      ref={magneticRef as React.RefObject<HTMLDivElement>}
+      className={className}
+      style={{
+        willChange: 'transform',
+        transform: 'translateZ(0)'
+      }}
+    >
+      {children}
+    </div>
+  );
+});
+MagneticButton.displayName = 'MagneticButton';
+
+// Theme toggle button
+const ThemeToggle = memo(() => {
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const reducedMotion = useReducedMotion();
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  const toggleTheme = useCallback(() => {
+    if (mounted) {
+      setTheme(theme === "dark" ? "light" : "dark");
+    }
+  }, [theme, setTheme, mounted]);
+  
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="relative rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10"
+        aria-label="Toggle theme"
+        disabled
+      >
+        <div className="h-5 w-5" />
+      </Button>
+    );
+  }
+  
+  return (
+    <MagneticButton>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        className="relative rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 hover:bg-white/20 dark:hover:bg-white/10 transition-colors"
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      >
+        <motion.div
+          initial={false}
+          animate={{ rotate: theme === "dark" ? 180 : 0 }}
+          transition={reducedMotion ? { duration: 0 } : { duration: 0.5, ease: "easeInOut" }}
+        >
+          <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+        </motion.div>
+      </Button>
+    </MagneticButton>
+  );
+});
+ThemeToggle.displayName = 'ThemeToggle';
+
+// Available for freelance badge
+const FreelanceBadge = memo(() => {
+  const reducedMotion = useReducedMotion();
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+      className="hidden md:block"
+    >
+      <div className="relative">
+        {!reducedMotion && (
+          <div className="absolute inset-0 bg-green-500 blur-xl opacity-30 animate-pulse" />
+        )}
+        <div className="relative px-3 py-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-500/30 rounded-full">
+          <div className="flex items-center gap-1.5">
+            <div className={cn(
+              "w-2 h-2 bg-green-500 rounded-full",
+              !reducedMotion && "animate-pulse"
+            )} />
+            <span className="text-xs font-medium text-green-400">Available for Freelance</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+FreelanceBadge.displayName = 'FreelanceBadge';
+
+// Desktop navigation
+const DesktopNav = memo(() => {
+  const sections = navItems.map(item => item.href.substring(1));
+  const activeSection = useSmoothActiveSection(sections);
+  const reducedMotion = useReducedMotion();
+  
+  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ 
+        behavior: reducedMotion ? 'auto' : 'smooth',
+        block: 'start'
+      });
+    }
+  }, [reducedMotion]);
+  
+  return (
+    <div className="hidden md:flex items-center flex-1 justify-center">
+      <div className="relative flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10">
+        <LayoutGroup>
+          {navItems.map((item, index) => {
+            const Icon = item.icon;
+            const isActive = `#${activeSection}` === item.href;
+            
+            return (
+              <MagneticButton key={item.href} strength={0.2}>
+                <motion.a
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className={cn(
+                    "relative px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-2 group",
+                    isActive
+                      ? "text-primary"
+                      : "text-foreground/70 hover:text-foreground"
+                  )}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={reducedMotion ? {} : { scale: 1.05 }}
+                  whileTap={reducedMotion ? {} : { scale: 0.95 }}
+                >
+                  {/* Active indicator */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeNav"
+                      className="absolute inset-0 bg-primary/10 rounded-full"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      style={{
+                        willChange: 'transform',
+                        transform: 'translateZ(0)'
+                      }}
+                    />
+                  )}
+                  
+                  <Icon className="w-4 h-4 relative z-10" />
+                  <span className="relative z-10 font-medium">{item.label}</span>
+                  
+                  {/* Hover effect */}
+                  {!reducedMotion && (
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-600/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      initial={false}
+                    />
+                  )}
+                </motion.a>
+              </MagneticButton>
+            );
+          })}
+        </LayoutGroup>
+      </div>
+      
+      <div className="ml-4">
+        <ThemeToggle />
+      </div>
+    </div>
+  );
+});
+DesktopNav.displayName = 'DesktopNav';
+
+// Mobile navigation
+const MobileNav = memo(({ 
+  isOpen, 
+  onClose 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void;
+}) => {
+  const sections = navItems.map(item => item.href.substring(1));
+  const activeSection = useSmoothActiveSection(sections);
+  const reducedMotion = useReducedMotion();
+  
+  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ 
+        behavior: reducedMotion ? 'auto' : 'smooth',
+        block: 'start'
+      });
+      onClose();
+    }
+  }, [onClose, reducedMotion]);
+  
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3 }}
+          className="md:hidden mt-4 overflow-hidden"
+        >
+          <div className="bg-white/10 dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-white/10 p-4">
+            <LayoutGroup>
+              {navItems.map((item, index) => {
+                const Icon = item.icon;
+                const isActive = `#${activeSection}` === item.href;
+                
+                return (
+                  <motion.a
+                    key={item.href}
+                    href={item.href}
+                    onClick={(e) => handleNavClick(e, item.href)}
+                    initial={{ x: -50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={cn(
+                      "flex items-center gap-3 py-3 px-4 rounded-xl transition-all",
+                      isActive
+                        ? "bg-primary/20 text-primary"
+                        : "text-foreground/70 hover:bg-white/10 hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeMobileNav"
+                        className="ml-auto w-2 h-2 bg-primary rounded-full"
+                      />
+                    )}
+                  </motion.a>
+                );
+              })}
+            </LayoutGroup>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+});
+MobileNav.displayName = 'MobileNav';
+
+// Main header component
+export default function ImprovedHeader() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const { width } = useViewportSize();
+  const isMobile = width < 768;
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > SCROLL_THRESHOLD);
+    };
+    
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [mounted]);
+  
+  return (
+    <>
+      {/* Smooth scroll progress bar */}
+      {mounted && <ScrollProgressBar />}
+      
+      {/* Header */}
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+          mounted && isScrolled
+            ? "py-2 bg-background/60 dark:bg-background/40 backdrop-blur-xl border-b border-white/10 shadow-lg"
+            : "py-4 bg-transparent"
+        )}
+      >
+        <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <MagneticButton>
+              <motion.a
+                href="#home"
+                className="relative text-2xl font-bold"
+                whileHover={reducedMotion ? {} : { scale: 1.05 }}
+                whileTap={reducedMotion ? {} : { scale: 0.95 }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.scrollTo({ 
+                    top: 0, 
+                    behavior: reducedMotion ? 'auto' : 'smooth' 
+                  });
+                }}
+              >
+                <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Awais Zegham
+                </span>
+                {!reducedMotion && (
+                  <motion.span
+                    className="absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-primary via-purple-600 to-pink-600"
+                    initial={{ width: 0 }}
+                    whileHover={{ width: "100%" }}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
+              </motion.a>
+            </MagneticButton>
+            
+            {/* Desktop navigation */}
+            <DesktopNav />
+            
+            {/* Freelance badge */}
+            <FreelanceBadge />
+            
+            {/* Mobile menu controls */}
+            {isMobile && (
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="rounded-full bg-white/10 backdrop-blur-md border border-white/20"
+                  aria-label="Toggle menu"
+                  aria-expanded={isMenuOpen}
+                >
+                  <AnimatePresence mode="wait">
+                    {isMenuOpen ? (
+                      <motion.div
+                        key="close"
+                        initial={{ rotate: -90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: 90, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <X className="h-5 w-5" />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="menu"
+                        initial={{ rotate: 90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: -90, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Menu className="h-5 w-5" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          {/* Mobile navigation */}
+          <MobileNav isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+        </nav>
+      </motion.header>
+    </>
+  );
+}
