@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Mail, 
@@ -38,8 +39,24 @@ interface FormErrors {
   message?: string;
 }
 
+// Animation variants
+const fadeInUpVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const fadeInLeftVariants = {
+  hidden: { opacity: 0, x: -50 },
+  visible: { opacity: 1, x: 0 }
+};
+
+const fadeInRightVariants = {
+  hidden: { opacity: 0, x: 50 },
+  visible: { opacity: 1, x: 0 }
+};
+
 // Contact info card component
-function ContactCard({ 
+const ContactCard = React.memo(({ 
   icon: Icon, 
   title, 
   content, 
@@ -49,7 +66,7 @@ function ContactCard({
   title: string; 
   content: string; 
   href?: string;
-}) {
+}) => {
   const CardContent = (
     <motion.div
       whileHover={{ scale: 1.05, y: -5 }}
@@ -86,7 +103,7 @@ function ContactCard({
   }
 
   return CardContent;
-}
+});
 
 export default function EnhancedContact() {
   const [formData, setFormData] = useState<FormData>({
@@ -99,8 +116,35 @@ export default function EnhancedContact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
 
+  // Memoize static data
+  const contactInfo = useMemo(() => [
+    {
+      icon: Mail,
+      title: "Email",
+      content: "Awaiszegham374@gmail.com",
+      href: "mailto:Awaiszegham374@gmail.com",
+    },
+    {
+      icon: Phone,
+      title: "Phone",
+      content: "+1 (289) 946-2124",
+      href: "tel:+12899462124",
+    },
+    {
+      icon: MapPin,
+      title: "Location",
+      content: "Milton, ON",
+    },
+  ], []);
+
+  const socialLinks = useMemo(() => [
+    { icon: Github, href: "https://github.com/zegh6389", label: "GitHub" },
+    { icon: Linkedin, href: "https://www.linkedin.com/in/awais-zegham-38201b272/", label: "LinkedIn" },
+    { icon: Twitter, href: "https://twitter.com/", label: "Twitter" },
+  ], []);
+
   // Validate form
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     const newErrors: FormErrors = {};
     
     if (!formData.name.trim()) {
@@ -125,10 +169,10 @@ export default function EnhancedContact() {
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData]);
 
   // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
@@ -143,60 +187,37 @@ export default function EnhancedContact() {
       setFormData({ name: "", email: "", subject: "", message: "" });
       
       // Reset success message after 5 seconds
-      setTimeout(() => setSubmitStatus("idle"), 5000);
+      setTimeout(() => {
+        setSubmitStatus("idle");
+      }, 5000);
     } catch {
       setSubmitStatus("error");
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [validateForm]);
 
   // Handle input change
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     // Clear error for this field
     if (errors[name as keyof FormErrors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
-  };
-
-  const contactInfo = [
-    {
-      icon: Mail,
-      title: "Email",
-      content: "Awaiszegham374@gmail.com",
-      href: "mailto:Awaiszegham374@gmail.com",
-    },
-    {
-      icon: Phone,
-      title: "Phone",
-      content: "+1 (289) 946-2124",
-      href: "tel:+12899462124",
-    },
-    {
-      icon: MapPin,
-      title: "Location",
-      content: "Milton, ON",
-    },
-  ];
-
-  const socialLinks = [
-    { icon: Github, href: "https://github.com/zegh6389", label: "GitHub" },
-    { icon: Linkedin, href: "https://www.linkedin.com/in/awais-zegham-38201b272/", label: "LinkedIn" },
-    { icon: Twitter, href: "https://twitter.com/", label: "Twitter" },
-  ];
+  }, [errors]);
 
   return (
     <section id="contact" className="py-20 relative overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-600/5" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-600/5 will-change-transform" />
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          variants={fadeInUpVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
@@ -219,8 +240,9 @@ export default function EnhancedContact() {
         <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
           {/* Contact Form */}
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            variants={fadeInLeftVariants}
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
@@ -390,8 +412,9 @@ export default function EnhancedContact() {
 
           {/* Contact Info */}
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            variants={fadeInRightVariants}
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className="space-y-6"
