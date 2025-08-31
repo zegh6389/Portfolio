@@ -1,5 +1,3 @@
-import { ANIMATION_CONFIG } from './constants/animation';
-
 /**
  * Advanced animation performance monitoring and optimization system
  */
@@ -183,7 +181,7 @@ export class AnimationPerformanceMonitor {
 
   private getMemoryUsage(): number {
     if (typeof window !== 'undefined' && 'memory' in performance) {
-      const memory = (performance as any).memory;
+      const memory = (performance as unknown as { memory: { usedJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
       return memory.usedJSHeapSize / memory.jsHeapSizeLimit;
     }
     return 0;

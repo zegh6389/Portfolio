@@ -250,7 +250,7 @@ export default function OptimizedHeader() {
   const toggleTheme = useCallback(() => {
     animationQueue.add({
       id: 'theme-toggle',
-      priority: AnimationPriority.IMMEDIATE,
+      priority: AnimationPriority.CRITICAL,
       execute: () => {
         setTheme(theme === "dark" ? "light" : "dark");
       },
@@ -464,9 +464,9 @@ export default function OptimizedHeader() {
             <AnimatePresence>
               {isMenuOpen && (
                 <motion.div
-                  initial={animationQuality === 'low' ? false : { opacity: 0, height: 0 }}
+                  initial={animationQuality === 'low' ? undefined : { opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
-                  exit={animationQuality === 'low' ? false : { opacity: 0, height: 0 }}
+                  exit={animationQuality === 'low' ? undefined : { opacity: 0, height: 0 }}
                   transition={{ duration: animationQuality === 'low' ? 0 : 0.3 }}
                   className="md:hidden mt-4 overflow-hidden"
                 >
@@ -480,7 +480,7 @@ export default function OptimizedHeader() {
                           key={item.href}
                           href={item.href}
                           onClick={(e) => handleNavClick(e, item.href)}
-                          initial={animationQuality === 'low' ? false : { x: -50, opacity: 0 }}
+                          initial={animationQuality === 'low' ? undefined : { x: -50, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
                           transition={{ delay: animationQuality === 'low' ? 0 : index * 0.05 }}
                           className={cn(
