@@ -7,6 +7,7 @@ import { Moon, Sun, Menu, X, Home, User, Briefcase, Mail, Code2 } from "lucide-r
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabaseClient";
 
 // Constants
 const SCROLL_THRESHOLD = 20;
@@ -75,6 +76,7 @@ function MagneticButton({ children, className }: { children: React.ReactNode; cl
 }
 
 export default function EnhancedHeaderFixed() {
+  const [name, setName] = useState("Awais Zegham");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   // Motion values for scroll progress (avoids re-renders)
@@ -85,8 +87,26 @@ export default function EnhancedHeaderFixed() {
   const { theme, setTheme } = useTheme();
   const prefersReducedMotion = usePrefersReducedMotion();
 
+  const PROFILE_ID = "f45427e8-634a-4713-a2e6-15582e796472";
+
   useEffect(() => {
     setMounted(true);
+
+    async function fetchName() {
+        const { data, error } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", PROFILE_ID)
+            .single();
+
+        if (error) {
+            console.error("Error fetching name:", error);
+        } else if (data) {
+            setName(data.name);
+        }
+    }
+
+    fetchName();
   }, []);
 
   // Scroll progress + active section via simple center-based scan (more robust than IO here)
@@ -190,7 +210,7 @@ export default function EnhancedHeaderFixed() {
                   className="relative text-2xl font-bold group"
                 >
                   <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    Awais Zegham
+                    {name}
                   </span>
                   {mounted && (
                     <span className="absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-primary via-purple-600 to-pink-600 w-0 group-hover:w-full transition-all duration-300" />
