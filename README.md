@@ -1,194 +1,162 @@
-# Portfolio Website
+# Dynamic Portfolio with Supabase
 
-A modern, performant portfolio website built with Next.js 15, TypeScript, and Tailwind CSS.
+This is a flexible, data-driven portfolio template built with Next.js, Tailwind CSS, and Framer Motion. The entire portfolio is powered by a Supabase backend, allowing for easy content management without touching the code. It's designed to be easily customizable for students and developers to showcase their work.
 
-## 🚀 Features
+## Features
 
-- **Modern Tech Stack**: Next.js 15, React 18, TypeScript, Tailwind CSS
-- **Smooth Animations**: Framer Motion for fluid interactions
-- **3D Elements**: Three.js integration for interactive resume display
-- **Dark/Light Mode**: Theme switching with next-themes
-- **Responsive Design**: Mobile-first approach with adaptive layouts
-- **Performance Optimized**: Lazy loading, code splitting, and optimized animations
-- **Type Safe**: Full TypeScript implementation
+- **Dynamic Content:** All content, including personal information, skills, and projects, is fetched from Supabase.
+- **Admin-Friendly:** Easily manage all portfolio content directly through the Supabase dashboard.
+- **Modern Tech Stack:** Built with Next.js App Router, TypeScript, and Tailwind CSS.
+- **Rich Animations:** Smooth page transitions and interactive elements powered by Framer Motion.
+- **Responsive Design:** Looks great on all devices, from mobile phones to desktops.
+- **Dark/Light Mode:** Includes a theme toggler for user preference.
 
-## 📁 Project Structure
+## Tech Stack
 
-```
-portfolio/
-├── app/
-│   ├── globals.css       # Global styles and Tailwind imports
-│   ├── layout.tsx        # Root layout with theme provider
-│   └── page.tsx          # Main landing page
-├── components/
-│   ├── EnhancedHeaderFixed.tsx    # Navigation header with scroll effects
-│   ├── EnhancedHero.tsx           # Hero section with animations
-│   ├── StatsSection.tsx           # Statistics display
-│   ├── EnhancedSkills.tsx         # Skills showcase
-│   ├── LazyResume3D.tsx           # 3D resume viewer
-│   ├── EnhancedProjectsSection.tsx # Projects portfolio
-│   ├── EnhancedContact.tsx        # Contact form
-│   ├── LazyComponent.tsx          # Lazy loading wrapper
-│   ├── theme-provider.tsx         # Theme context provider
-│   └── ui/                        # Reusable UI components
-│       ├── animated-nav.tsx
-│       ├── animated-text.tsx
-│       ├── badge.tsx
-│       ├── button.tsx
-│       ├── input.tsx
-│       ├── label.tsx
-│       ├── textarea.tsx
-│       ├── toast.tsx
-│       └── toaster.tsx
-├── hooks/
-│   ├── use-intersection-observer.ts # Viewport detection
-│   ├── use-mobile.ts                # Mobile device detection
-│   ├── use-reduced-motion.ts       # Accessibility preference
-│   └── use-toast.ts                # Toast notifications
-├── lib/
-│   ├── animation-utils.ts          # Animation utilities
-│   ├── utils.ts                    # General utilities
-│   └── constants/
-│       └── animation.ts            # Animation constants
-└── public/                         # Static assets
+- **Framework:** [Next.js](https://nextjs.org/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **Animations:** [Framer Motion](https://www.framer.com/motion/)
+- **Backend:** [Supabase](https://supabase.io/) (Database, Auth, Storage)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
 
-```
+---
 
-## 🛠️ Installation
+## Getting Started
 
-1. Clone the repository:
+Follow these instructions to get the project up and running on your local machine.
+
+### 1. Prerequisites
+
+Make sure you have the following installed:
+- [Node.js](https://nodejs.org/) (v18 or later)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+
+### 2. Clone the Repository
+
 ```bash
-git clone [your-repo-url]
-cd portfolio
+git clone <your-repository-url>
+cd <repository-folder>
 ```
 
-2. Install dependencies:
+### 3. Install Dependencies
+
 ```bash
 npm install
 ```
 
-3. Run the development server:
+### 4. Set Up Supabase
+
+This project requires a Supabase project to function as the backend.
+
+1.  **Create a Supabase Project:**
+    - Go to [supabase.com](https://supabase.com/) and create a new project.
+    - Save your **Project URL** and **`anon` public key**.
+
+2.  **Set up Database Schema:**
+    - In your Supabase project, go to the **SQL Editor**.
+    - Click **New query** and paste the entire SQL script below to create all the necessary tables and relationships. Click **Run**.
+
+    ```sql
+    -- 1. PROFILES TABLE (Main table for a user's portfolio)
+    CREATE TABLE profiles (
+      id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+      name TEXT NOT NULL,
+      hero_description TEXT,
+      hero_tech_stack TEXT[],
+      skills_title TEXT,
+      skills_subtitle TEXT,
+      stats_technologies TEXT,
+      stats_experience TEXT,
+      stats_projects TEXT,
+      stats_clients TEXT,
+      projects_title TEXT,
+      projects_subtitle TEXT,
+      created_at TIMESTAMPTZ DEFAULT now()
+    );
+
+    -- 2. HERO_ROLES TABLE (Rotating roles for the hero section)
+    CREATE TABLE hero_roles (
+      id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+      profile_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+      role_name TEXT NOT NULL,
+      "order" INTEGER
+    );
+
+    -- 3. SKILLS TABLE
+    CREATE TABLE skills (
+      id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+      profile_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      level INTEGER NOT NULL,
+      category TEXT NOT NULL
+    );
+
+    -- 4. PROJECTS TABLE
+    CREATE TABLE projects (
+      id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+      profile_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      description TEXT,
+      image_url TEXT,
+      technologies TEXT[],
+      category TEXT,
+      github_link TEXT,
+      demo_link TEXT,
+      featured BOOLEAN DEFAULT false
+    );
+    ```
+
+3.  **Add Sample Data (Optional but Recommended):**
+    - After creating the tables, you can run the following SQL in the SQL Editor to insert some sample data.
+    - **Important:** Replace `'f45427e8-634a-4713-a2e6-15582e796472'` with a new UUID you generate, or use the one provided. If you use a new one, make sure to update it in the components (`EnhancedHero.tsx`, `EnhancedSkills.tsx`, etc.) where `PROFILE_ID` is hardcoded.
+
+    ```sql
+    -- Insert into profiles
+    INSERT INTO profiles (id, name, hero_description, hero_tech_stack, skills_title, skills_subtitle, stats_technologies, stats_experience, stats_projects, stats_clients, projects_title, projects_subtitle)
+    VALUES ('f45427e8-634a-4713-a2e6-15582e796472', 'Your Name', 'Your personal description here.', '{"React", "Next.js", "TypeScript"}', 'Skills & Expertise', 'My technical toolkit.', '20+', '5+', '50+', '30+', 'Featured Projects', 'A selection of my best work.');
+
+    -- Insert into hero_roles
+    INSERT INTO hero_roles (profile_id, role_name, "order")
+    VALUES ('f45427e8-634a-4713-a2e6-15582e796472', 'Full Stack Developer', 1), ('f45427e8-634a-4713-a2e6-15582e796472', 'Creative Thinker', 2);
+
+    -- Insert into skills
+    INSERT INTO skills (profile_id, name, level, category)
+    VALUES ('f45427e8-634a-4713-a2e6-15582e796472', 'React/Next.js', 95, 'Frontend'), ('f45427e8-634a-4713-a2e6-15582e796472', 'Node.js', 88, 'Backend');
+
+    -- Insert into projects
+    INSERT INTO projects (profile_id, title, description, image_url, technologies, category, github_link, demo_link, featured)
+    VALUES ('f45427e8-634a-4713-a2e6-15582e796472', 'AI Task Manager', 'An intelligent task management tool.', 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=600&h=400&fit=crop', '{"Next.js", "AI"}', 'Full Stack', 'https://github.com', 'https://demo.com', true);
+    ```
+
+### 5. Set Up Environment Variables
+
+1.  Create a new file named `.env.local` in the root of your project.
+2.  Add the following variables, replacing the placeholder values with your Supabase project's URL and anon key.
+
+    ```
+    NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+    ```
+
+### 6. Run the Development Server
+
+Now you can start the development server:
+
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
-
-## 📦 Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run analyze` - Analyze bundle size
-
-## 🎨 Components
-
-### Core Components
-
-- **EnhancedHeaderFixed**: Responsive navigation with scroll effects, theme toggle, and mobile menu
-- **EnhancedHero**: Animated hero section with typewriter effects and particle animations
-- **StatsSection**: Display key statistics and achievements
-- **EnhancedSkills**: Interactive skills showcase with categorization
-- **LazyResume3D**: 3D resume viewer using Three.js
-- **EnhancedProjectsSection**: Project portfolio with filtering and animations
-- **EnhancedContact**: Contact form with validation
-
-### UI Components
-
-- **animated-text**: TypewriterText and ScrambleText effects
-- **button**: Customizable button with variants
-- **badge**: Tag/badge component for skills and categories
-- **toast**: Notification system
-
-## 🎯 Performance Optimizations
-
-- **Lazy Loading**: Components loaded on-demand
-- **Code Splitting**: Automatic route-based splitting
-- **Optimized Animations**: Reduced particle count, GPU acceleration
-- **Image Optimization**: Next.js Image component usage
-- **Bundle Analysis**: Webpack bundle analyzer integration
-
-## 🔧 Configuration
-
-### Tailwind CSS
-Configuration in `tailwind.config.ts` includes:
-- Custom color scheme
-- Animation utilities
-- Responsive breakpoints
-- Dark mode support
-
-### TypeScript
-Strict type checking enabled in `tsconfig.json`
-
-### ESLint
-Code quality rules in `.eslintrc.json`
-
-## 🌐 Browser Support
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-
-## 📄 License
-
-MIT License - feel free to use this project for your own portfolio!
-
-## 👤 Author
-
-**Awais Zegham**
-- Full Stack Developer
-- UI/UX Designer
-- Available for freelance work
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ---
 
-Built with ❤️ using Next.js, TypeScript, and Tailwind CSS
+## Future Work
 
-## ☁️ Deploying to Vercel
+This project provides a solid foundation for a dynamic portfolio. Here are some ideas for future improvements:
 
-This project is fully ready for Vercel deployment.
-
-### Quick Deploy
-
-1. Push the repository to GitHub (public or private)
-2. Go to https://vercel.com/new and import the repo
-3. Vercel will auto-detect Next.js and use:
-	- Install Command: `npm install`
-	- Build Command: `npm run build`
-	- Output: `.next`
-4. Click Deploy
-
-### Environment Variables (optional)
-If you later add API keys (e.g., OPENAI_API_KEY), set them in the Vercel dashboard under Project Settings → Environment Variables, then redeploy.
-
-### Custom Domains
-Add your domain in Vercel → Domains. Update DNS with the provided A / CNAME records. Propagation can take up to a few hours.
-
-### Analytics & Speed
-- Enable Vercel Analytics in the project settings for performance insights.
-- Consider adding `next/script` for any external scripts to keep performance high.
-
-### Edge / Serverless Notes
-Currently no custom API routes or dynamic server functions are defined—static + client rendering should deploy seamlessly. If you add server code, it will run as Serverless Functions automatically.
-
-### Local Preview of Production Build
-```bash
-npm run build
-npm start
-```
-
-### Troubleshooting
-| Issue | Fix |
-|-------|-----|
-| Build exceeds memory | Increase `NODE_OPTIONS` memory or remove large unused deps |
-| Images from new domains blocked | Add domain to `images.domains` in `next.config.js` |
-| 404 after adding new route | Ensure file exists under `app/` and redeploy |
-
-`vercel.json` is included for explicit commands & region targeting (adjust region as desired).
-
+-   **Build an Admin Dashboard:** Create a protected, user-friendly interface for managing portfolio content, so you don't have to use the Supabase table editor directly.
+-   **Full Multi-Tenancy:** Implement a user authentication system (with Supabase Auth) to allow multiple users to sign up and manage their own portfolios. This would involve dynamically setting the `PROFILE_ID` based on the logged-in user.
+-   **Image Management:** Integrate [Supabase Storage](https://supabase.com/docs/guides/storage) to allow users to upload project images and a profile picture directly, rather than pasting URLs.
+-   **Enhanced Customization:** Add options in the admin dashboard to control theme colors, fonts, and layout choices.
+-   **Contact Form Integration:** Connect the contact form to a service like Resend or store submissions in a Supabase table.
+-   **CI/CD Pipeline:** Set up a CI/CD pipeline with GitHub Actions to automate testing and deployments to a hosting provider like Vercel.
