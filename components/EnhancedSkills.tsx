@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { 
@@ -18,66 +18,112 @@ import {
   Layers
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabaseClient";
 
-interface Skill {
+// DB skill type
+interface SkillFromDB {
   name: string;
   level: number;
   category: string;
+}
+
+// Component skill type (with icon and color)
+interface SkillData extends SkillFromDB {
   icon: React.ElementType;
   color: string;
 }
 
-const skills: Skill[] = [
-  // Frontend
-  { name: "React/Next.js", level: 95, category: "Frontend", icon: Code2, color: "from-blue-500 to-cyan-500" },
-  { name: "TypeScript", level: 90, category: "Frontend", icon: Code2, color: "from-blue-600 to-blue-400" },
-  { name: "Tailwind CSS", level: 92, category: "Frontend", icon: Palette, color: "from-teal-500 to-cyan-500" },
-  { name: "Framer Motion", level: 85, category: "Frontend", icon: Zap, color: "from-purple-500 to-pink-500" },
-  { name: "Three.js", level: 75, category: "Frontend", icon: Layers, color: "from-indigo-500 to-purple-500" },
-  
-  // Backend
-  { name: "Node.js", level: 88, category: "Backend", icon: Server, color: "from-green-500 to-emerald-500" },
-  { name: "Python", level: 85, category: "Backend", icon: Code2, color: "from-yellow-500 to-orange-500" },
-  { name: "PostgreSQL", level: 82, category: "Backend", icon: Database, color: "from-blue-500 to-indigo-500" },
-  { name: "MongoDB", level: 80, category: "Backend", icon: Database, color: "from-green-600 to-green-400" },
-  { name: "GraphQL", level: 78, category: "Backend", icon: Globe, color: "from-pink-500 to-rose-500" },
-  
-  // Tools & DevOps
-  { name: "Git/GitHub", level: 92, category: "Tools", icon: GitBranch, color: "from-gray-600 to-gray-400" },
-  { name: "Docker", level: 75, category: "Tools", icon: Cloud, color: "from-blue-600 to-sky-500" },
-  { name: "AWS", level: 70, category: "Tools", icon: Cloud, color: "from-orange-500 to-yellow-500" },
-  { name: "CI/CD", level: 78, category: "Tools", icon: Zap, color: "from-purple-600 to-purple-400" },
-  
-  // Mobile & Other
-  { name: "React Native", level: 80, category: "Mobile", icon: Smartphone, color: "from-cyan-500 to-blue-500" },
-  { name: "Flutter", level: 65, category: "Mobile", icon: Smartphone, color: "from-blue-500 to-light-blue-400" },
-  { name: "Security", level: 75, category: "Other", icon: Shield, color: "from-red-500 to-orange-500" },
-  { name: "AI/ML", level: 70, category: "Other", icon: Brain, color: "from-purple-600 to-pink-600" },
-];
+// Type for profile data related to this section
+interface ProfileSkillsData {
+  skills_title: string;
+  skills_subtitle: string;
+  stats_technologies: string;
+  stats_experience: string;
+  stats_projects: string;
+  stats_clients: string;
+}
 
-const categories = ["All", "Frontend", "Backend", "Tools", "Mobile", "Other"];
+// Mapping from category to icon and color
+const categoryStyles: { [key: string]: { icon: React.ElementType; color: string } } = {
+  Frontend: { icon: Code2, color: "from-blue-500 to-cyan-500" },
+  Backend: { icon: Server, color: "from-green-500 to-emerald-500" },
+  Tools: { icon: GitBranch, color: "from-gray-600 to-gray-400" },
+  Mobile: { icon: Smartphone, color: "from-cyan-500 to-blue-500" },
+  Other: { icon: Brain, color: "from-purple-600 to-pink-600" },
+  Default: { icon: Zap, color: "from-indigo-500 to-purple-500" },
+};
 
 export default function EnhancedSkills() {
+  const [skills, setSkills] = useState<SkillData[]>([]);
+  const [profileData, setProfileData] = useState<ProfileSkillsData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [mounted, setMounted] = useState(false);
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
+
   const prefersReducedMotion = useReducedMotion();
   const gridRef = useRef<HTMLDivElement | null>(null);
   useInView(gridRef, { once: true, margin: "-80px" });
 
+  const PROFILE_ID = "f45427e8-634a-4713-a2e6-15582e796472";
+
   useEffect(() => {
-    setMounted(true);
+    async function fetchData() {
+      // Fetch skills
+      const { data: skillsData, error: skillsError } = await supabase
+        .from("skills")
+        .select("name, level, category")
+        .eq("profile_id", PROFILE_ID);
+
+      if (skillsError) {
+        console.error("Error fetching skills:", skillsError);
+      } else {
+        const processedSkills = skillsData.map((s: SkillFromDB) => ({
+          ...s,
+          ...(categoryStyles[s.category] || categoryStyles.Default),
+        }));
+        setSkills(processedSkills);
+      }
+
+      // Fetch profile text content
+      const { data: profileInfo, error: profileError } = await supabase
+        .from("profiles")
+        .select("skills_title, skills_subtitle, stats_technologies, stats_experience, stats_projects, stats_clients")
+        .eq("id", PROFILE_ID)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile skills data:", profileError);
+        // Set fallback data
+        setProfileData({
+            skills_title: "Skills & Expertise",
+            skills_subtitle: "A comprehensive toolkit of modern technologies and frameworks",
+            stats_technologies: "18+",
+            stats_experience: "5+",
+            stats_projects: "50+",
+            stats_clients: "30+",
+        });
+      } else {
+        setProfileData(profileInfo);
+      }
+    }
+    fetchData();
   }, []);
 
-  const filteredSkills = selectedCategory === "All" 
-    ? skills 
-    : skills.filter(skill => skill.category === selectedCategory);
+  // Dynamically generate categories from skills
+  const categories = useMemo(() => {
+    if (skills.length === 0) return ["All"];
+    const skillCategories = skills.map(s => s.category);
+    return ["All", ...Array.from(new Set(skillCategories))];
+  }, [skills]);
 
-  // Stable particle seeds per skill (avoids Math.random during render each hover)
+  const filteredSkills = useMemo(() => {
+    return selectedCategory === "All"
+      ? skills
+      : skills.filter(skill => skill.category === selectedCategory);
+  }, [selectedCategory, skills]);
+
   const particleSeedsRef = useRef<Record<string, number[]>>({});
-  if (Object.keys(particleSeedsRef.current).length === 0) {
+  if (Object.keys(particleSeedsRef.current).length === 0 && skills.length > 0) {
     skills.forEach(s => {
-      // deterministic pseudo-random seeds based on char codes
       const base = s.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
       particleSeedsRef.current[s.name] = [0,1,2].map(i => (base * (i + 3) * 97) % 100);
     });
@@ -112,7 +158,9 @@ export default function EnhancedSkills() {
     }
   };
 
-  if (!mounted) return null;
+  if (!profileData) {
+    return <div className="py-20 text-center">Loading skills...</div>;
+  }
 
   return (
     <section id="skills" className="py-20 relative overflow-hidden">
@@ -134,11 +182,11 @@ export default function EnhancedSkills() {
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Skills & Expertise
+              {profileData.skills_title}
             </span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A comprehensive toolkit of modern technologies and frameworks
+            {profileData.skills_subtitle}
           </p>
         </motion.div>
 

@@ -12,12 +12,12 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
 interface Project {
   id: number;
   title: string;
-  description: string;
-  image?: string;
+  description:string;
+  image_url?: string;
   technologies: string[];
   category: string;
-  github?: string;
-  demo?: string;
+  github_link?: string;
+  demo_link?: string;
   featured?: boolean;
 }
 
@@ -97,9 +97,13 @@ export default function EnhancedProjectCard({
                   isHovered && !prefersReducedMotion ? "scale-[1.08]" : "scale-100"
                 )}
               >
-                <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
-                  <span className="text-white/50 text-sm">Project Preview</span>
-                </div>
+                {project.image_url ? (
+                  <img src={project.image_url} alt={project.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
+                    <span className="text-white/50 text-sm">Project Preview</span>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -142,13 +146,13 @@ export default function EnhancedProjectCard({
               </div>
               
               <div className="flex gap-4">
-                {project.demo && (
+                {project.demo_link && (
                   <Button
                     size="sm"
                     className="relative overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors group text-white"
                     asChild
                   >
-                    <Link href={project.demo} target="_blank" rel="noopener noreferrer" className="flex items-center">
+                    <Link href={project.demo_link} target="_blank" rel="noopener noreferrer" className="flex items-center">
                       <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.25),transparent_60%)]" />
                       <span className="absolute -inset-1 rounded-md bg-gradient-to-r from-primary/50 via-purple-600/50 to-pink-600/50 opacity-0 group-hover:opacity-30 blur-2xl transition-opacity duration-500" />
                       <ExternalLink className="w-4 h-4 mr-2 relative z-10 drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
@@ -214,9 +218,13 @@ export default function EnhancedProjectCard({
               isHovered && !prefersReducedMotion ? "scale-[1.08]" : "scale-100"
             )}
           >
-            <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
-              <span className="text-white/50 text-sm">Project Preview</span>
-            </div>
+             {project.image_url ? (
+              <img src={project.image_url} alt={project.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
+                <span className="text-white/50 text-sm">Project Preview</span>
+              </div>
+            )}
           </div>
           
           {/* Hover overlay with links */}
@@ -227,13 +235,13 @@ export default function EnhancedProjectCard({
             transition={{ duration: 0.25 }}
             style={{ pointerEvents: isHovered ? "auto" : "none" }}
           >
-            {project.demo && (
+            {project.demo_link && (
               <Button
                 size="sm"
                 className="relative overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors group text-white"
                 asChild
               >
-                <Link href={project.demo} target="_blank" rel="noopener noreferrer" className="flex items-center">
+                <Link href={project.demo_link} target="_blank" rel="noopener noreferrer" className="flex items-center">
                   <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.25),transparent_60%)]" />
                   <span className="absolute -inset-1 rounded-md bg-gradient-to-r from-primary/50 via-purple-600/50 to-pink-600/50 opacity-0 group-hover:opacity-30 blur-2xl transition-opacity duration-500" />
                   <ExternalLink className="w-4 h-4 mr-2 relative z-10 drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" />

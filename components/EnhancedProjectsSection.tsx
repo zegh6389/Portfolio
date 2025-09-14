@@ -1,85 +1,33 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ChevronLeft, ChevronRight, Grid3x3, List, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import EnhancedProjectCard from "./EnhancedProjectCard";
+import { supabase } from "@/lib/supabaseClient";
 
-// Sample project data - replace with your actual projects
-const projects = [
-  {
-    id: 1,
-    title: "E-Commerce Platform",
-    description: "Full-stack e-commerce solution with React, Node.js, and MongoDB. Features include user authentication, payment processing, inventory management, and real-time order tracking.",
-    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop",
-    technologies: ["React", "Node.js", "MongoDB", "Stripe", "Redis", "Docker"],
-    category: "Full Stack",
-    github: "https://github.com",
-    demo: "https://demo.com",
-    featured: true,
-  },
-  {
-    id: 2,
-    title: "AI Task Manager",
-    description: "Intelligent task management tool with AI-powered prioritization, natural language processing for task creation, and predictive analytics for deadline management.",
-    image: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=600&h=400&fit=crop",
-    technologies: ["Next.js", "TypeScript", "Prisma", "PostgreSQL", "OpenAI", "Vercel"],
-    category: "Full Stack",
-    github: "https://github.com",
-    demo: "https://demo.com",
-    featured: true,
-  },
-  {
-    id: 3,
-    title: "Weather Analytics Dashboard",
-    description: "Advanced weather visualization platform with real-time data, predictive modeling, and interactive maps. Includes historical data analysis and custom alerts.",
-    image: "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=600&h=400&fit=crop",
-    technologies: ["React", "D3.js", "Chart.js", "OpenWeather API", "MapBox"],
-    category: "Frontend",
-    github: "https://github.com",
-    demo: "https://demo.com",
-    featured: false,
-  },
-  {
-    id: 4,
-    title: "Social Media API",
-    description: "Scalable RESTful API for social media platform with GraphQL support, real-time notifications, and advanced caching strategies.",
-    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=600&h=400&fit=crop",
-    technologies: ["Node.js", "GraphQL", "Redis", "MongoDB", "WebSocket"],
-    category: "Backend",
-    github: "https://github.com",
-    demo: "https://demo.com",
-    featured: false,
-  },
-  {
-    id: 5,
-    title: "3D Portfolio Showcase",
-    description: "Immersive portfolio website featuring 3D animations, particle effects, and interactive experiences built with cutting-edge web technologies.",
-    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop",
-    technologies: ["Next.js", "Three.js", "GSAP", "Framer Motion", "WebGL"],
-    category: "Frontend",
-    github: "https://github.com",
-    demo: "https://demo.com",
-    featured: true,
-  },
-  {
-    id: 6,
-    title: "Real-time Collaboration Suite",
-    description: "Enterprise-grade collaboration platform with video conferencing, screen sharing, collaborative editing, and team analytics.",
-    image: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&h=400&fit=crop",
-    technologies: ["React", "Socket.io", "WebRTC", "Node.js", "Redis", "AWS"],
-    category: "Full Stack",
-    github: "https://github.com",
-    demo: "https://demo.com",
-    featured: false,
-  },
-];
+interface Project {
+  id: number;
+  title: string;
+  description: string;
+  image_url?: string;
+  technologies: string[];
+  category: string;
+  github_link?: string;
+  demo_link?: string;
+  featured?: boolean;
+}
 
-const categories = ["All", "Full Stack", "Frontend", "Backend"];
+interface ProfileProjectsData {
+  projects_title: string;
+  projects_subtitle: string;
+}
 
 export default function EnhancedProjectsSection() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [profileData, setProfileData] = useState<ProfileProjectsData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
@@ -87,37 +35,74 @@ export default function EnhancedProjectsSection() {
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const projectsPerPage = 6;
 
-  // Filter projects based on search, category, and featured status
+  const PROFILE_ID = "f45427e8-634a-4713-a2e6-15582e796472";
+
+  useEffect(() => {
+    async function fetchData() {
+      // Fetch projects
+      const { data: projectsData, error: projectsError } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("profile_id", PROFILE_ID);
+
+      if (projectsError) {
+        console.error("Error fetching projects:", projectsError);
+      } else {
+        setProjects(projectsData);
+      }
+
+      // Fetch profile text content
+      const { data: profileInfo, error: profileError } = await supabase
+        .from("profiles")
+        .select("projects_title, projects_subtitle")
+        .eq("id", PROFILE_ID)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile projects data:", profileError);
+        setProfileData({
+          projects_title: "Featured Projects",
+          projects_subtitle: "Explore my latest work and creative solutions built with modern technologies",
+        });
+      } else {
+        setProfileData(profileInfo);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const categories = useMemo(() => {
+    if (projects.length === 0) return ["All"];
+    const projectCategories = projects.map(p => p.category);
+    return ["All", ...Array.from(new Set(projectCategories))];
+  }, [projects]);
+
   const filteredProjects = useMemo(() => {
-    const trimmedSearch = searchTerm.trim();
-    const result = projects.filter((project) => {
-      const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           project.technologies.some(tech => tech.toLowerCase().includes(searchTerm.toLowerCase()));
+    const trimmedSearch = searchTerm.trim().toLowerCase();
+    return projects.filter((project) => {
+      const matchesSearch =
+        project.title.toLowerCase().includes(trimmedSearch) ||
+        project.description.toLowerCase().includes(trimmedSearch) ||
+        project.technologies.some(tech => tech.toLowerCase().includes(trimmedSearch));
       const matchesCategory = selectedCategory === "All" || project.category === selectedCategory;
       const matchesFeatured = !showFeaturedOnly || project.featured;
       return matchesSearch && matchesCategory && matchesFeatured;
     });
-    // Fallback: if nothing matches but user hasn't actually applied any constraint, return all
-    const noRealFilters = trimmedSearch === "" && selectedCategory === "All" && !showFeaturedOnly;
-    if (result.length === 0 && noRealFilters) return projects;
-    return result;
-  }, [searchTerm, selectedCategory, showFeaturedOnly]);
+  }, [projects, searchTerm, selectedCategory, showFeaturedOnly]);
 
-  // Expose for quick debugging in browser console
-  if (typeof window !== 'undefined') {
-    // @ts-expect-error - Adding debug property to window for development
-    window.__debugProjects = { all: projects, filtered: filteredProjects };
-  }
-
-  // Pagination
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
-  const startIndex = (currentPage - 1) * projectsPerPage;
-  const paginatedProjects = filteredProjects.slice(startIndex, startIndex + projectsPerPage);
+  const paginatedProjects = useMemo(() => {
+    const startIndex = (currentPage - 1) * projectsPerPage;
+    return filteredProjects.slice(startIndex, startIndex + projectsPerPage);
+  }, [filteredProjects, currentPage, projectsPerPage]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
+
+  if (!profileData) {
+    return <div className="py-20 text-center">Loading projects...</div>;
+  }
 
   return (
     <section id="projects" className="py-20 px-4 sm:px-6 lg:px-8 relative">
@@ -147,11 +132,11 @@ export default function EnhancedProjectsSection() {
           
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Featured Projects
+              {profileData.projects_title}
             </span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Explore my latest work and creative solutions built with modern technologies
+            {profileData.projects_subtitle}
           </p>
         </motion.div>
 

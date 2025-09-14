@@ -6,6 +6,18 @@ import { Mail, ChevronDown, Sparkles, Code, Palette, Rocket } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TypewriterText, ScrambleText } from "@/components/ui/animated-text";
+import { supabase } from "@/lib/supabaseClient";
+
+// Define types for our data
+interface Profile {
+  name: string;
+  hero_description: string;
+  hero_tech_stack: string[];
+}
+
+interface HeroRole {
+  role_name: string;
+}
 
 // Floating animation component
 function FloatingIcon({ icon: Icon, delay = 0, className }: { icon: React.ElementType; delay?: number; className?: string }) {
@@ -97,26 +109,61 @@ function ParticleField() {
 }
 
 export default function EnhancedHero() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [roles, setRoles] = useState<string[]>([]);
   const [currentRole, setCurrentRole] = useState(0);
   const controls = useAnimation();
   
-  const roles = [
-    "Full Stack Developer",
-    "UI/UX Designer",
-    "Problem Solver",
-    "Creative Thinker",
-  ];
-
-  const techStack = [
-    "React", "Next.js", "TypeScript", "Node.js", 
-    "Tailwind CSS", "PostgreSQL", "Docker", "AWS"
-  ];
+  // Hardcoded profile ID for now. In a real app, this would be dynamic.
+  const PROFILE_ID = "f45427e8-634a-4713-a2e6-15582e796472";
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentRole((prev) => (prev + 1) % roles.length);
-    }, 3000);
-    return () => clearInterval(interval);
+    async function fetchData() {
+      // Fetch profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("name, hero_description, hero_tech_stack")
+        .eq("id", PROFILE_ID)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        // Set fallback data
+        setProfile({
+          name: "Awais Zegham",
+          hero_description: "Building innovative web solutions with modern technologies and creative design.",
+          hero_tech_stack: ["React", "Next.js", "TypeScript", "Node.js", "Tailwind CSS", "PostgreSQL", "Docker", "AWS"],
+        });
+      } else {
+        setProfile(profileData);
+      }
+
+      // Fetch hero roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .from("hero_roles")
+        .select("role_name")
+        .eq("profile_id", PROFILE_ID)
+        .order("order", { ascending: true });
+
+      if (rolesError) {
+        console.error("Error fetching roles:", rolesError);
+        // Set fallback data
+        setRoles(["Full Stack Developer", "UI/UX Designer", "Problem Solver"]);
+      } else {
+        setRoles(rolesData.map(r => r.role_name));
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (roles.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentRole((prev) => (prev + 1) % roles.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
   }, [roles.length]);
 
   useEffect(() => {
@@ -126,6 +173,11 @@ export default function EnhancedHero() {
       transition: { duration: 0.5 },
     });
   }, [currentRole, controls]);
+
+  if (!profile) {
+    // Render a loading state or a skeleton screen
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
   <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
@@ -165,7 +217,7 @@ export default function EnhancedHero() {
           >
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
               <TypewriterText 
-                text="Hi, I'm Awais Zegham"
+                text={`Hi, I'm ${profile.name}`}
                 className="text-foreground"
                 duration={3}
                 delay={0.15}
@@ -181,7 +233,7 @@ export default function EnhancedHero() {
                 animate={controls}
                 className="block bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent mt-2"
               >
-                {roles[currentRole]}
+                {roles[currentRole] || "..."}
               </motion.span>
             </div>
           </motion.div>
@@ -193,9 +245,8 @@ export default function EnhancedHero() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl sm:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto"
           >
-            <span>Building innovative web solutions with </span>
             <ScrambleText
-              text="modern technologies and creative design"
+              text={profile.hero_description}
               className="inline-block"
               duration={3}
             />
@@ -208,7 +259,7 @@ export default function EnhancedHero() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-wrap justify-center gap-2 mb-12"
           >
-            {techStack.map((tech, index) => (
+            {profile.hero_tech_stack.map((tech, index) => (
               <motion.div
                 key={tech}
                 initial={{ opacity: 0, scale: 0 }}
